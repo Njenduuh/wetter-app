@@ -1,44 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weather Dashboard</title>
-  <link rel="stylesheet" href="./styles/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="./styles/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-  <div class="container">
-    <!-- Search Section -->
-    <div class="search-section">
-      <input type="text" id="search-input" placeholder="Enter city name..." autocomplete="off">
-      <ul id="suggestions" class="suggestions"></ul>
-      <button id="search-btn">Search</button>
+    <div class="container">
+        <header>
+            <h1>Weather Dashboard</h1>
+            <div class="search-container">
+                <input type="text" id="cityInput" placeholder="Enter city name...">
+                <button id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <div id="recentSearches" class="recent-searches">
+                <!-- Recent searches will be added here -->
+            </div>
+        </header>
+
+        <main>
+            <div id="weatherCard" class="weather-card hidden">
+                <div class="weather-header">
+                    <h2 id="cityName">City Name</h2>
+                    <p id="currentDate">Date</p>
+                </div>
+                <div class="weather-info">
+                    <div class="weather-icon">
+                        <img id="weatherIcon" src="" alt="Weather Icon">
+                    </div>
+                    <div class="temperature">
+                        <h3 id="temperature">--°C</h3>
+                        <p id="weatherDescription">Weather Description</p>
+                    </div>
+                    <div class="weather-details">
+                        <div class="detail">
+                            <i class="fas fa-temperature-high"></i>
+                            <p>Feels Like: <span id="feelsLike">--°C</span></p>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-wind"></i>
+                            <p>Wind: <span id="windSpeed">-- km/h</span></p>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-tint"></i>
+                            <p>Humidity: <span id="humidity">--%</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error-message hidden">
+                <!-- Error messages will be displayed here -->
+            </div>
+
+            <div id="loadingSpinner" class="loading-spinner hidden">
+                <div class="spinner"></div>
+            </div>
+        </main>
     </div>
 
-    <!-- Weather Display Section -->
-    <div class="weather-display">
-      <div class="current-weather">
-        <h2 id="city-name">City</h2>
-        <p id="temperature">Temperature: -- °C</p>
-        <p id="humidity">Humidity: --%</p>
-        <p id="wind-speed">Wind Speed: -- km/h</p>
-        <img id="weather-icon" src="" alt="Weather Icon">
-      </div>
-
-      <!-- 7-Day Forecast -->
-      <div class="forecast">
-        <h3>7-Day Forecast</h3>
-        <div id="forecast-cards" class="forecast-cards">
-          <!-- Forecast cards will be dynamically added here -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Error Message -->
-    <div id="error-message" class="error-message hidden"></div>
-  </div>
-
-  <script src="scripts/app.js"></script>
+    <script src="/scripts/app.js"></script>
 </body>
 </html>
-
