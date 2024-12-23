@@ -1,6 +1,7 @@
 // API configuration
 const API_KEY = 'a7f737c640fcab223de39b5daba4f8e7';
-const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
+const WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather';
+const FORECAST_URL = 'https://api.openweathermap.org/data/2.5/forecast'; // Updated forecast endpoint
 
 // DOM elements
 const cityInput = document.getElementById('cityInput');
@@ -9,6 +10,20 @@ const weatherCard = document.getElementById('weatherCard');
 const errorMessage = document.getElementById('errorMessage');
 const loadingSpinner = document.getElementById('loadingSpinner');
 const recentSearches = document.getElementById('recentSearches');
+const themeToggle = document.getElementById('themeToggle');
+const dynamicBgToggle = document.getElementById('dynamicBgToggle');
+const forecastSection = document.getElementById('forecastSection');
+const forecastContainer = document.getElementById('forecastContainer');
+
+// Theme state
+let isDarkMode = localStorage.getItem('darkMode') === 'true';
+let isDynamicBg = localStorage.getItem('dynamicBg') === 'true';
+let lastWeatherData = null;
+
+// Initialize theme
+document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+themeToggle.innerHTML = `<i class="fas fa-${isDarkMode ? 'sun' : 'moon'}"></i>`;
+dynamicBgToggle.classList.toggle('active', isDynamicBg);
 
 // Event listeners
 searchBtn.addEventListener('click', handleSearch);
@@ -17,6 +32,8 @@ cityInput.addEventListener('keypress', (e) => {
         handleSearch();
     }
 });
+themeToggle.addEventListener('click', toggleTheme);
+dynamicBgToggle.addEventListener('click', toggleDynamicBackground);
 
 // Load recent searches from localStorage
 let recentSearchesList = JSON.parse(localStorage.getItem('recentSearches')) || [];
@@ -25,6 +42,40 @@ displayRecentSearches();
 // Auto-update timer
 let updateTimer;
 
+// Theme functions
+function toggleTheme() {
+    isDarkMode = !isDarkMode;
+    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    themeToggle.innerHTML = `<i class="fas fa-${isDarkMode ? 'sun' : 'moon'}"></i>`;
+    localStorage.setItem('darkMode', isDarkMode);
+}
+
+function toggleDynamicBackground() {
+    isDynamicBg = !isDynamicBg;
+    dynamicBgToggle.classList.toggle('active', isDynamicBg);
+    localStorage.setItem('dynamicBg', isDynamicBg);
+    if (isDynamicBg && lastWeatherData) {
+        setDynamicBackground(lastWeatherData.weather[0].main);
+    } else {
+        document.body.className = '';
+    }
+}
+
+function setDynamicBackground(weatherMain) {
+    if (!isDynamicBg) return;
+    
+    const weatherMap = {
+        Clear: 'bg-clear',
+        Clouds: 'bg-clouds',
+        Rain: 'bg-rain',
+        Snow: 'bg-snow',
+        Thunderstorm: 'bg-thunderstorm'
+    };
+    
+    document.body.className = weatherMap[weatherMain] || '';
+}
+
+// Weather data functions
 async function handleSearch() {
     const city = cityInput.value.trim();
     if (!city) {
@@ -35,9 +86,16 @@ async function handleSearch() {
     try {
         showLoading();
         const weatherData = await fetchWeatherData(city);
+        const forecastData = await fetchForecastData(city);
+        
         displayWeatherData(weatherData);
+        displayForecastData(forecastData);
         updateRecentSearches(city);
         startAutoUpdate(city);
+        
+        if (isDynamicBg) {
+            setDynamicBackground(weatherData.weather[0].main);
+        }
     } catch (error) {
         showError(error.message);
     } finally {
@@ -46,7 +104,7 @@ async function handleSearch() {
 }
 
 async function fetchWeatherData(city) {
-    const url = `${BASE_URL}?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`;
+    const url = `${WEATHER_URL}?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`;
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -58,11 +116,22 @@ async function fetchWeatherData(city) {
     return await response.json();
 }
 
+async function fetchForecastData(city) {
+    const url = `${FORECAST_URL}?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`;
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+        throw new Error('Failed to fetch forecast data');
+    }
+    
+    return await response.json();
+}
+
 function displayWeatherData(data) {
     weatherCard.classList.remove('hidden');
     errorMessage.classList.add('hidden');
+    lastWeatherData = data;
 
-    // Update DOM elements with weather data
     document.getElementById('cityName').textContent = `${data.name}, ${data.sys.country}`;
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
         weekday: 'long',
@@ -79,23 +148,114 @@ function displayWeatherData(data) {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 
-    // Update weather icon
     const iconCode = data.weather[0].icon;
-    const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-    document.getElementById('weatherIcon').src = iconUrl;
+    document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+}
+
+function displayForecastData(data) {
+    forecastSection.classList.remove('hidden');
+    forecastContainer.innerHTML = '';
+    
+    // Group forecast data by day
+    const dailyForecasts = groupForecastsByDay(data.list);
+    
+    // Display forecast for next 5 days
+    Object.values(dailyForecasts).slice(1, 6).forEach(dayData => {
+        const card = document.createElement('div');
+        card.className = 'forecast-card';
+        
+        const date = new Date(dayData.date);
+        const minTemp = Math.min(...dayData.temps);
+        const maxTemp = Math.max(...dayData.temps);
+        const avgHumidity = Math.round(dayData.humidities.reduce((a, b) => a + b) / dayData.humidities.length);
+        const avgWindSpeed = Math.round(dayData.windSpeeds.reduce((a, b) => a + b) / dayData.windSpeeds.length * 3.6); // Convert to km/h
+        const mostFrequentWeather = getMostFrequentWeather(dayData.weatherTypes);
+        
+        card.innerHTML = `
+            <div class="date">${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+            <div class="weather-icon">
+                <img src="https://openweathermap.org/img/wn/${mostFrequentWeather.icon}@2x.png" alt="${mostFrequentWeather.description}">
+            </div>
+            <div class="temp-range">
+                <span class="high">${Math.round(maxTemp)}°C</span> / 
+                <span class="low">${Math.round(minTemp)}°C</span>
+            </div>
+            <div class="details">
+                <div>
+                    <i class="fas fa-tint"></i>
+                    <span>${avgHumidity}%</span>
+                </div>
+                <div>
+                    <i class="fas fa-wind"></i>
+                    <span>${avgWindSpeed} km/h</span>
+                </div>
+                <div>
+                    <i class="fas fa-cloud"></i>
+                    <span>${mostFrequentWeather.description}</span>
+                </div>
+            </div>
+        `;
+        
+        forecastContainer.appendChild(card);
+    });
+}
+
+function groupForecastsByDay(forecastList) {
+    const dailyForecasts = {};
+    
+    forecastList.forEach(forecast => {
+        const date = new Date(forecast.dt * 1000);
+        const dateKey = date.toDateString();
+        
+        if (!dailyForecasts[dateKey]) {
+            dailyForecasts[dateKey] = {
+                date: date,
+                temps: [],
+                humidities: [],
+                windSpeeds: [],
+                weatherTypes: []
+            };
+        }
+        
+        dailyForecasts[dateKey].temps.push(forecast.main.temp);
+        dailyForecasts[dateKey].humidities.push(forecast.main.humidity);
+        dailyForecasts[dateKey].windSpeeds.push(forecast.wind.speed);
+        dailyForecasts[dateKey].weatherTypes.push({
+            main: forecast.weather[0].main,
+            description: forecast.weather[0].description,
+            icon: forecast.weather[0].icon
+        });
+    });
+    
+    return dailyForecasts;
+}
+
+function getMostFrequentWeather(weatherTypes) {
+    const weatherFrequency = {};
+    let maxFreq = 0;
+    let mostFrequentWeather = null;
+    
+    weatherTypes.forEach(weather => {
+        const key = weather.main;
+        weatherFrequency[key] = (weatherFrequency[key] || 0) + 1;
+        
+        if (weatherFrequency[key] > maxFreq) {
+            maxFreq = weatherFrequency[key];
+            mostFrequentWeather = weather;
+        }
+    });
+    
+    return mostFrequentWeather;
 }
 
 function updateRecentSearches(city) {
-    // Remove the city if it already exists and add it to the beginning
     recentSearchesList = recentSearchesList.filter(item => item.toLowerCase() !== city.toLowerCase());
     recentSearchesList.unshift(city);
     
-    // Keep only the last 5 searches
     if (recentSearchesList.length > 5) {
         recentSearchesList.pop();
     }
 
-    // Save to localStorage and update display
     localStorage.setItem('recentSearches', JSON.stringify(recentSearchesList));
     displayRecentSearches();
 }
@@ -115,17 +275,13 @@ function displayRecentSearches() {
 }
 
 function startAutoUpdate(city) {
-    // Clear existing timer if any
     if (updateTimer) {
         clearInterval(updateTimer);
     }
 
-    // Set new timer for 10-minute updates
     updateTimer = setInterval(() => {
         if (document.visibilityState === 'visible') {
-            fetchWeatherData(city)
-                .then(displayWeatherData)
-                .catch(error => showError(error.message));
+            handleSearch();
         }
     }, 600000); // 10 minutes in milliseconds
 }
@@ -134,12 +290,14 @@ function showError(message) {
     errorMessage.textContent = message;
     errorMessage.classList.remove('hidden');
     weatherCard.classList.add('hidden');
+    forecastSection.classList.add('hidden');
 }
 
 function showLoading() {
     loadingSpinner.classList.remove('hidden');
     weatherCard.classList.add('hidden');
     errorMessage.classList.add('hidden');
+    forecastSection.classList.add('hidden');
 }
 
 function hideLoading() {

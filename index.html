@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,17 @@
 <body>
     <div class="container">
         <header>
-            <h1>Weather Dashboard</h1>
+            <div class="header-top">
+                <h1>Weather Dashboard</h1>
+                <div class="theme-controls">
+                    <button id="themeToggle" class="theme-toggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="dynamicBgToggle" class="theme-toggle">
+                        <i class="fas fa-image"></i>
+                    </button>
+                </div>
+            </div>
             <div class="search-container">
                 <input type="text" id="cityInput" placeholder="Enter city name...">
                 <button id="searchBtn">
@@ -53,6 +63,14 @@
                 </div>
             </div>
 
+            <!-- New Forecast Section -->
+            <div id="forecastSection" class="forecast-section hidden">
+                <h3>7-Day Forecast</h3>
+                <div id="forecastContainer" class="forecast-container">
+                    <!-- Forecast cards will be added here -->
+                </div>
+            </div>
+
             <div id="errorMessage" class="error-message hidden">
                 <!-- Error messages will be displayed here -->
             </div>
@@ -63,6 +81,6 @@
         </main>
     </div>
 
-    <script src="/scripts/app.js"></script>
+    <script src="scripts/app.js"></script>
 </body>
 </html>
