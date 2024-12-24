@@ -1,7 +1,7 @@
 // API configuration
 const API_KEY = 'a7f737c640fcab223de39b5daba4f8e7';
 const WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather';
-const FORECAST_URL = 'https://api.openweathermap.org/data/2.5/forecast'; // Updated forecast endpoint
+const FORECAST_URL = 'https://api.openweathermap.org/data/2.5/forecast';
 
 // DOM elements
 const cityInput = document.getElementById('cityInput');
@@ -141,7 +141,7 @@ function displayWeatherData(data) {
     });
     document.getElementById('temperature').textContent = `${Math.round(data.main.temp)}°C`;
     document.getElementById('feelsLike').textContent = `${Math.round(data.main.feels_like)}°C`;
-    document.getElementById('windSpeed').textContent = `${Math.round(data.wind.speed * 3.6)} km/h`; // Convert m/s to km/h
+    document.getElementById('windSpeed').textContent = `${Math.round(data.wind.speed * 3.6)} km/h`;
     document.getElementById('humidity').textContent = `${data.main.humidity}%`;
     document.getElementById('weatherDescription').textContent = data.weather[0].description
         .split(' ')
@@ -162,14 +162,16 @@ function displayForecastData(data) {
     // Display forecast for next 5 days
     Object.values(dailyForecasts).slice(1, 6).forEach(dayData => {
         const card = document.createElement('div');
-        card.className = 'forecast-card';
+        const mostFrequentWeather = getMostFrequentWeather(dayData.weatherTypes);
+        
+        // Add weather-specific class for background
+        card.className = `forecast-card weather-${mostFrequentWeather.main}`;
         
         const date = new Date(dayData.date);
         const minTemp = Math.min(...dayData.temps);
         const maxTemp = Math.max(...dayData.temps);
         const avgHumidity = Math.round(dayData.humidities.reduce((a, b) => a + b) / dayData.humidities.length);
-        const avgWindSpeed = Math.round(dayData.windSpeeds.reduce((a, b) => a + b) / dayData.windSpeeds.length * 3.6); // Convert to km/h
-        const mostFrequentWeather = getMostFrequentWeather(dayData.weatherTypes);
+        const avgWindSpeed = Math.round(dayData.windSpeeds.reduce((a, b) => a + b) / dayData.windSpeeds.length * 3.6);
         
         card.innerHTML = `
             <div class="date">${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>

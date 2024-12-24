@@ -13,10 +13,10 @@
             <div class="header-top">
                 <h1>Weather Dashboard</h1>
                 <div class="theme-controls">
-                    <button id="themeToggle" class="theme-toggle">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle Dark/Light Mode">
                         <i class="fas fa-moon"></i>
                     </button>
-                    <button id="dynamicBgToggle" class="theme-toggle">
+                    <button id="dynamicBgToggle" class="theme-toggle" title="Toggle Dynamic Backgrounds">
                         <i class="fas fa-image"></i>
                     </button>
                 </div>
@@ -63,9 +63,8 @@
                 </div>
             </div>
 
-            <!-- New Forecast Section -->
             <div id="forecastSection" class="forecast-section hidden">
-                <h3>7-Day Forecast</h3>
+                <h3>5-Day Forecast</h3>
                 <div id="forecastContainer" class="forecast-container">
                     <!-- Forecast cards will be added here -->
                 </div>
@@ -81,6 +80,6 @@
         </main>
     </div>
 
-    <script src="scripts/app.js"></script>
+    <script src="./scripts/app.js"></script>
 </body>
 </html>
